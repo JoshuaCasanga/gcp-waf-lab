@@ -1,7 +1,6 @@
 # Fase 1 — Red: VPC, subred, firewall y salida controlada
 
 > **Objetivo:** una VPC propia donde **nada es alcanzable desde Internet** salvo a través del balanceador de Google, con salida a Internet solo por NAT y acceso administrativo solo por IAP.
-> **Tiempo estimado:** 25 min.
 
 ```
 Internet ──X──> VMs (no tienen IP pública)
@@ -45,7 +44,7 @@ La consola ofrece reglas sugeridas (`allow-icmp`, `allow-ssh`, `allow-rdp`, `all
 
 Click **Create**.
 
-> 🧠 **Concepto:** una VPC nueva trae dos reglas implícitas que **no se ven** en la lista: *deny all ingress* y *allow all egress*, ambas con prioridad 65535. Todo ingreso está bloqueado hasta que lo permitas explícitamente.
+> Una VPC nueva trae dos reglas implícitas que **no se ven** en la lista: *deny all ingress* y *allow all egress*, ambas con prioridad 65535. Todo ingreso está bloqueado hasta que lo permitas explícitamente.
 
 ---
 
@@ -96,13 +95,12 @@ Click **Create**.
 | **Source IPv4 ranges** | `0.0.0.0/0` | |
 | **Protocols and ports** | **Deny all** | |
 
-> 💡 **Mejora opcional (nivel arquitecto):** Google recomienda migrar de *VPC firewall rules* a **Network firewall policies** (globales, con soporte de etiquetas IAM, FQDN y geolocalización). Documéntalo como "trabajo futuro" en el README: muestra que conoces la evolución del producto.
 
 ---
 
 ## 1.3 Cloud Router + Cloud NAT (salida controlada)
 
-Las VMs no tendrán IP pública, pero necesitan descargar paquetes (`apt`) y la imagen de Juice Shop desde Docker Hub.
+Las VMs no tendrán IP pública, pero necesitan descargar paquetes (`apt-get install`) y la imagen de Juice Shop desde Docker Hub.
 
 **Ruta:** ☰ → **Network services** → **Cloud NAT** → **Create Cloud NAT gateway**
 
@@ -124,21 +122,3 @@ Click **Create**.
 
 ---
 
-## 1.4 Verificación
-
-```bash
-gcloud compute networks subnets describe snet-web-scl --region=southamerica-west1 \
-  --format="value(ipCidrRange,privateIpGoogleAccess)"
-# 10.10.10.0/24  True
-
-gcloud compute firewall-rules list --filter="network=vpc-waap-lab" \
-  --format="table(name,priority,direction,sourceRanges.list(),allowed[].map().firewall_rule().list(),denied[].map().firewall_rule().list(),targetTags.list())"
-
-gcloud compute routers nats describe nat-scl --router=cr-scl --region=southamerica-west1
-```
-
-📸 **Evidencia para GitHub:** captura de la lista de reglas de firewall y del detalle de Cloud NAT → `evidencias/01-firewall.png`, `evidencias/01-nat.png`.
-
-✅ **Checkpoint:** VPC custom, 1 subred, 3 reglas de firewall, Cloud NAT operativo.
-
-➡️ Siguiente: [Fase 2 — Cómputo](02-computo.md)
