@@ -88,15 +88,15 @@ Resultado real obtenido en el lab:
 
 Los campos `matched*` solo aparecen con logging **VERBOSE** (Fase 4.8). La app respondió `500`: la sonda llegó a Juice Shop y rompió su consulta, lo que confirma que la app es vulnerable y que nada la estaba deteniendo.
 
-> 💡 **No confundir con la regla de rate limit.** La regla 2000 tiene `match: true`, así que aparece como `enforcedSecurityPolicy` en casi **todas** las peticiones legítimas (`configuredAction: RATE_BASED_BAN`, `outcome: ACCEPT`, `rateLimitAction.outcome: RATE_LIMIT_THRESHOLD_CONFORM` = bajo el umbral). No es un baneo. Para aislar tu sonda, filtra también por URL: `httpRequest.requestUrl:"/rest/products/search"`.
+> **No confundir con la regla de rate limit.** La regla 2000 tiene `match: true`, así que aparece como `enforcedSecurityPolicy` en casi **todas** las peticiones legítimas (`configuredAction: RATE_BASED_BAN`, `outcome: ACCEPT`, `rateLimitAction.outcome: RATE_LIMIT_THRESHOLD_CONFORM` = bajo el umbral). No es un block activo. Para aislar la prueba, se debe filtrar también por URL: `httpRequest.requestUrl:"/rest/products/search"`.
 >
-> Si la regla de confianza quedó **antes** de las firmas (p. ej. prioridad 100), el *allow* gana primero y tu IP **no se inspecciona**: no habrá coincidencia de preview y la sonda llegará a la app aun en enforcement. Debe ir en `1400` (ver Fase 4.6).
 
-📸 **Evidencia "antes":** log mostrando la firma detectada en modo preview → `evidencias/05-preview-detect.png`.
+
+ **Evidencia "antes":** log mostrando la firma detectada en modo preview → `evidencias/05-preview-detect.png`.
 
 ---
 
-## 5.3 Pasar a enforcement
+## 5.3 Pasar a enforcement/blocking
 
 En cada regla WAF (prioridades 1000–1070) **desmarca Preview** y guarda. CLI equivalente:
 
@@ -111,7 +111,7 @@ done
 
 ## 5.4 Demostración "después" (enforcement)
 
-Repite exactamente las mismas sondas. Ahora la respuesta debe ser **403** y la app nunca las ve.
+Luego se repiten exactamente las mismas pruebas. Ahora la respuesta debe ser **403** y la app nunca las ve.
 
 ```bash
 # SQLi canónico -> 403
@@ -161,23 +161,7 @@ gcloud logging read '
 
 La columna `preconfiguredExprIds` muestra el ID exacto del OWASP CRS, p. ej. `owasp-crs-v030301-id942100-sqli`. **Este dato es el puente con tu trabajo:** es el mismo tipo de "support ID / signature ID" que revisas en F5 para decidir si un bloqueo es legítimo o un falso positivo que amerita excepción.
 
-📸 **Evidencia "después":** terminal con los cuatro resultados (3×403 + 1×200) y la tabla de logs con los IDs de firma → `evidencias/05-enforce-403.png`, `evidencias/05-signature-ids.png`.
+ **Evidencia "después":** terminal con los cuatro resultados (3×403 + 1×200) y la tabla de logs con los IDs de firma → `evidencias/05-enforce-403.png`, `evidencias/05-signature-ids.png`.
 
 ---
 
-## 5.7 Afinar un falso positivo (opcional, muy recomendable para el portafolio)
-
-Si una petición legítima quedó bloqueada, identifica el ID de firma en el log y créale una excepción — exactamente el flujo de *rule tuning* que haces en ASM:
-
-```bash
-# Excluir una firma puntual del set SQLi (ejemplo)
-gcloud compute security-policies rules update 1000 \
-  --security-policy=ca-waap-lab \
-  --expression="evaluatePreconfiguredWaf('sqli-v33-stable', {'sensitivity': 1, 'opt_out_rule_ids': ['owasp-crs-v030301-id942430-sqli']})"
-```
-
-Documenta en el README **por qué** excluiste esa firma (qué petición legítima la activaba). Eso es lo que distingue a un analista de WAF de alguien que solo "prende el WAF".
-
-✅ **Checkpoint:** evidencia antes/después, rate limit demostrado, IDs de firma leídos en los logs, al menos un *tuning* documentado.
-
-➡️ Siguiente: [Fase 6 — Observabilidad](06-observabilidad.md)
