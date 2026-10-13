@@ -51,14 +51,6 @@ Click **Finish**.
 
 **Por qué no habilitar todo:** cada API habilitada es superficie de ataque y potencial costo. Principio de mínimo privilegio aplicado al proyecto.
 
-Equivalente CLI (desde Cloud Shell):
-
-```bash
-gcloud config set project waap-lab-<sufijo>
-gcloud services enable compute.googleapis.com logging.googleapis.com \
-  monitoring.googleapis.com iap.googleapis.com
-```
-
 ---
 
 ## 0.4 Decidir el nombre de dominio
@@ -70,17 +62,8 @@ El certificado TLS administrado por Google **necesita un nombre DNS** que apunte
 | **A. Dominio propio** (recomendada para portafolio) | Registrar un dominio barato y crear un registro `A` (en tu registrador o en Cloud DNS). | Se ve profesional en capturas; certificado normal. | Costo del dominio. |
 | **B. `sslip.io` / `nip.io`** | Usar `34-120-10-5.sslip.io` (la IP con guiones). Ese nombre ya resuelve a la IP sin configurar nada. | Gratis e inmediato. | Depende de un servicio de terceros; si el certificado no se emite, usar la opción A. |
 
-La IP se reserva en la [Fase 3](03-load-balancer.md); ahí se arma el nombre definitivo.
+La IP se reserva en la [Fase 3](03-load-balancer.md); ahí se arma el dominio del portal.
 
 ---
 
-## 0.5 Cloud Shell
-
-Abre **Cloud Shell** (icono `>_` arriba a la derecha). Ya trae `gcloud`, `curl`, `openssl` y `jq`; desde aquí ejecutarás las pruebas de la Fase 5.
-
-```bash
-git clone https://github.com/<tu-usuario>/gcp-waap-lab.git
-cd gcp-waap-lab
-cp scripts/00-variables.sh.example scripts/00-variables.sh   # edita PROJECT_ID y DOMAIN
-```
 
