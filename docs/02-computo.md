@@ -57,7 +57,6 @@ docker run -d --name juiceshop --restart unless-stopped \
 
 - `--restart unless-stopped`: si el proceso muere, Docker lo levanta.
 - `--log-driver=gcplogs`: los logs de la aplicación van **directo a Cloud Logging** (por Private Google Access), sin instalar agentes.
-- El script es **idempotente**: si la VM se reinicia, no falla por "contenedor ya existe".
 
 ---
 
@@ -105,19 +104,5 @@ Click **Create**.
 
 ---
 
-## 2.5 Verificación
-
-
-```bash
-# Las VMs NO deben tener IP externa (columna EXTERNAL_IP vacía)
-gcloud compute instances list --filter="name~juiceshop"
-
-# Entrar por IAP (sin IP pública, sin bastión)
-VM=$(gcloud compute instances list --filter="name~juiceshop" --format="value(name)" --limit=1)
-ZONE=$(gcloud compute instances list --filter="name=$VM" --format="value(zone.basename())")
-gcloud compute ssh "$VM" --zone="$ZONE" --tunnel-through-iap \
-  --command="sudo docker ps && curl -s -o /dev/null -w '%{http_code}\n' localhost:3000"
-# Esperado: contenedor juiceshop "Up" y código 200
-```
 
 
