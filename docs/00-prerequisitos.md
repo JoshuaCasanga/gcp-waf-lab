@@ -70,7 +70,7 @@ El certificado TLS administrado por Google **necesita un nombre DNS** que apunte
 | **A. Dominio propio** (recomendada para portafolio) | Registrar un dominio barato y crear un registro `A` (en tu registrador o en Cloud DNS). | Se ve profesional en capturas; certificado normal. | Costo del dominio. |
 | **B. `sslip.io` / `nip.io`** | Usar `34-120-10-5.sslip.io` (la IP con guiones). Ese nombre ya resuelve a la IP sin configurar nada. | Gratis e inmediato. | Depende de un servicio de terceros; si el certificado no se emite, usar la opción A. |
 
-La IP la reservas en la [Fase 3](03-load-balancer.md); ahí se arma el nombre definitivo.
+La IP se reserva en la [Fase 3](03-load-balancer.md); ahí se arma el nombre definitivo.
 
 ---
 
