@@ -48,17 +48,6 @@ El backend es **[OWASP Juice Shop](https://owasp.org/www-project-juice-shop/)**,
 | **Salida** | Cloud NAT solo de salida, con logging | Exposición entrante; deja registro de destinos contactados. |
 | **Observabilidad** | Logging al 100 % en el balanceador, Cloud Armor en **VERBOSE**, dashboard y alerta | Ataques que pasan sin que nadie los vea. |
 
-### Servicios de GCP y su equivalente en F5
-
-| Servicio GCP | Función en el lab | Equivalente F5 |
-|---|---|---|
-| Cloud Armor (backend security policy) | WAF, rate limiting, geo | ASM / F5 XC App Firewall + Service Policies |
-| Preconfigured WAF rules + sensibilidad | Firmas OWASP CRS por categoría | Attack signature sets + accuracy |
-| Preview mode (por regla) | Monitoreo sin bloquear | Staging / Transparent |
-| Global external Application LB | Terminación TLS y enrutamiento L7 | Virtual Server + perfil Client-SSL |
-| Backend service + health check | Pool, monitor y punto de anclaje del WAF | Pool + health monitor / Origin pool |
-| MIG regional | Backends autoescalables en 3 zonas | Miembros del pool |
-
 ---
 
 ## Evidencias
@@ -86,7 +75,7 @@ Con logging **VERBOSE**, Cloud Armor indica la firma, el parámetro y el valor e
 | `matchedFieldValue` | `' OR 1=1--` |
 | `preview` | `true` |
 
-### 2. Después: regla en enforcement (bloquea)
+### 2. Después: regla en enforcement (Modo Blocking)
 
 ![403 desde curl](evidencias/05-enforce-403.png)
 
@@ -132,7 +121,7 @@ También me di cuenta que las coincidencias en preview **no** aparecen en `enfor
 jsonPayload.previewSecurityPolicy.outcome="DENY"
 ```
 
-### ⚙️ Diferencias de la consola frente a la documentación habitual
+###  Diferencias de la consola frente a la documentación habitual
 
 | Paso | Qué cambió | Cómo se resolvió |
 |---|---|---|
