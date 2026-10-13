@@ -91,24 +91,3 @@ Se crea automáticamente un segundo forwarding rule en el puerto 80 con un URL m
 ## 3.3 Esperar el certificado y verificar
 
 El balanceador queda activo en 1–2 min, pero el **certificado** necesita que el DNS resuelva y puede tardar hasta 60 min en pasar a `ACTIVE`.
-
-```bash
-# Estado del certificado (repetir hasta ACTIVE)
-gcloud compute ssl-certificates describe cert-waap-lab --global \
-  --format="value(managed.status, managed.domainStatus)"
-# PROVISIONING → ACTIVE
-
-# Backends sanos (2/2)
-gcloud compute backend-services get-health bes-juiceshop --global \
-  --format="value(status.healthStatus[].healthState)"
-
-# Prueba de extremo a extremo
-curl -I http://app.tudominio.com      # -> 301 Moved Permanently a https
-curl -I https://app.tudominio.com     # -> 200 OK (Juice Shop)
-```
-
-📸 **Evidencia:** certificado `ACTIVE`, backends `2/2 HEALTHY`, Juice Shop abierto en el navegador por HTTPS con candado → `evidencias/03-cert-active.png`, `evidencias/03-portal-https.png`.
-
-✅ **Checkpoint:** portal accesible por HTTPS, HTTP redirige a HTTPS, TLS 1.2+ forzado, backends sanos. **Todavía sin WAF.**
-
-➡️ Siguiente: [Fase 4 — Cloud Armor (WAF)](04-cloud-armor.md)
