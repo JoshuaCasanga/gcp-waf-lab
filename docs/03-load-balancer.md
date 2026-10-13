@@ -23,7 +23,7 @@ Click **Reserve**.
 **Por qué estática:** el registro DNS `A` y el certificado administrado dependen de que la IP no cambie. Una IP efímera se perdería al recrear el balanceador.
 
 **Crear el dominio**
-- Acá utilicé `sslip.io`, lo que permite crear un dominio para el certificado TLS, sin configurar nada.
+- Acá utilicé `sslip.io`, lo que permite crear un dominio para poder acceder al Juice Shop y tambien crear el certificado TLS, sin configurar nada.
 
 ---
 
