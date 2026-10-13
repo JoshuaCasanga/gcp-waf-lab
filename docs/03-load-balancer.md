@@ -5,14 +5,6 @@
 
 El balanceador de aplicaciones global se compone de piezas encadenadas. La consola las crea en un solo asistente, pero conviene entender cada una porque el equivalente CLI las crea por separado.
 
-| Pieza | Función | Equivalente mental F5 |
-|---|---|---|
-| **Forwarding rule** | Une la IP+puerto público con un *target proxy*. | *Virtual Server* (IP:puerto). |
-| **Target proxy** | Termina TLS (si es HTTPS), sostiene el certificado y consulta el URL map. | Perfil Client-SSL + listener. |
-| **URL map** | Enruta por host/path hacia un backend service. | iRule / política de enrutamiento LTM. |
-| **Backend service** | Define salud, balanceo, named port, logging y **dónde se adjunta Cloud Armor**. | *Pool* + monitor. |
-| **Backend (MIG)** | Las VMs reales. | Miembros del pool. |
-
 ---
 
 ## 3.1 Reservar IP estática global
