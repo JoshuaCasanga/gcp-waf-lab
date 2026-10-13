@@ -1,9 +1,6 @@
 # Fase 6 — Observabilidad: dashboard, alertas y logs
 
 > **Objetivo:** convertir los eventos del WAF en algo visible y accionable — un dashboard de Monitoring, una alerta que avise ante un pico de bloqueos, y consultas de log guardadas.
-> **Tiempo estimado:** 25 min.
-
-Un WAF sin observabilidad es una caja negra. Esta fase es la que, en una entrevista, demuestra que piensas como operador de seguridad y no solo como instalador.
 
 ---
 
