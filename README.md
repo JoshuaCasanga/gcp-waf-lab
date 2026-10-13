@@ -1,4 +1,3 @@
-[README.md](https://github.com/user-attachments/files/33361619/README.md)
 # GCP WAF/WAAP Lab: Portal web protegido con Cloud Armor
 
 GCP WAAP Lab: portal web protegido con Cloud Armor
