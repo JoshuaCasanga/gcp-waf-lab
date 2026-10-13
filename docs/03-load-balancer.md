@@ -1,16 +1,7 @@
 # Fase 3 — Balanceador de aplicaciones global + HTTPS
 
 > **Objetivo:** publicar el MIG detrás de un **Global external Application Load Balancer** con IP pública estática, certificado TLS administrado por Google y redirección HTTP→HTTPS. Este balanceador es el punto donde, en la Fase 4, se "engancha" Cloud Armor.
-> **Tiempo estimado:** 25 min (+ hasta 60 min de emisión del certificado).
 
-```
-Cliente ─HTTPS─> [IP estática] ─> Forwarding rule :443 ─> Target HTTPS proxy (+cert +SSL policy)
-                                                                   │
-                                                              URL map ──> Backend service (named port http)
-                                                                   │              │
-                                        Forwarding rule :80 ─> Target HTTP proxy  └─> MIG (health check)
-                                        (URL map de redirect → 443)
-```
 
 El balanceador de aplicaciones global se compone de piezas encadenadas. La consola las crea en un solo asistente, pero conviene entender cada una porque el equivalente CLI las crea por separado.
 
@@ -31,17 +22,16 @@ El balanceador de aplicaciones global se compone de piezas encadenadas. La conso
 | Campo | Valor | Por qué |
 |---|---|---|
 | **Name** | `ip-waap-lab` | |
-| **Network Service Tier** | **Premium** | El balanceador **global** solo funciona en nivel Premium (usa la red troncal de Google y los GFE en el borde). *Standard* es regional. |
+| **Network Service Tier** | **Premium** | El balanceador **global** solo funciona en nivel Premium (se debe usar la red troncal de Google y los GFE en el borde). *Standard* es regional. |
 | **IP version** | IPv4 | |
 | **Type** | **Global** | Debe coincidir con el alcance del balanceador. Una IP *Regional* no se puede adjuntar a un forwarding rule global. |
 
-Click **Reserve**. Anota la IP (ej. `34.120.10.5`).
+Click **Reserve**.
 
 **Por qué estática:** el registro DNS `A` y el certificado administrado dependen de que la IP no cambie. Una IP efímera se perdería al recrear el balanceador.
 
-**Arma el nombre DNS ahora** (Fase 0.4):
-- Dominio propio → crea registro `A`: `app.tudominio.com → 34.120.10.5`.
-- `sslip.io` → tu hostname es `34-120-10-5.sslip.io` (sin configurar nada).
+**Crear el dominio**
+- Acá utilicé `sslip.io`, lo que permite crear un dominio para el certificado TLS, sin configurar nada.
 
 ---
 
@@ -49,7 +39,7 @@ Click **Reserve**. Anota la IP (ej. `34.120.10.5`).
 
 **Ruta:** ☰ → **Network services** → **Load balancing** → **Create load balancer**
 
-### Selección de tipo (4 pantallas)
+### Selección de tipo
 
 | Pantalla | Elección | Por qué |
 |---|---|---|
@@ -75,8 +65,8 @@ Click **Configure**. **Name:** `alb-waap-lab`.
 | **Balancing mode** | **Utilization**, Max 80 % | Envía tráfico según uso de CPU del backend. |
 | **Capacity** | `100 %` | |
 | **Health check** | `hc-juiceshop` (existente) | |
-| **Logging** | **Enable**, Sample rate `1` | 🔑 Registra **el 100 %** de las peticiones. Cada log trae latencia, código de respuesta y, cuando Cloud Armor actúe, **qué regla disparó**. Sin esto, la Fase 5 no tendría evidencia. |
-| **Cloud Armor → backend security policy** | déjalo en **None / Default** por ahora | La política se crea y adjunta en la Fase 4. |
+| **Logging** | **Enable**, Sample rate `1` |  Registra **el 100 %** de las peticiones. Cada log trae latencia, código de respuesta y, cuando Cloud Armor actúe, **qué regla disparó**. |
+| **Cloud Armor → backend security policy** | Se deja en **None / Default** por ahora | La política se crea y adjunta en la Fase 4. |
 | **Identity-Aware Proxy** | **Off** | IAP a nivel de app forzaría login de Google a todo visitante; queremos el portal público para probar el WAF. |
 
 Click **Create**.
@@ -97,21 +87,12 @@ Aquí se crean **dos** frontends: HTTPS (el real) y HTTP (solo para redirigir).
 | **SSL policy** | `ssl-pol-modern` (créala **antes**, ver nota abajo) | Deshabilita TLS 1.0/1.1 y cifradores débiles. Esto es *hardening* directo del control de "configuración TLS" que ya tocas con F5. La opción *GCP default* usa perfil **COMPATIBLE** y acepta TLS 1.0/1.1. |
 | **Early data (0-RTT)** | **Disabled** | 0-RTT reduce latencia pero expone la primera petición a ataques de *replay*. |
 
-> ⚠️ **El asistente ya no permite crear la SSL policy desde este desplegable** (solo lista las existentes). Créala antes en ☰ → **Network Security** → **SSL policies** → **Create policy**: Name `ssl-pol-modern`, *Minimum TLS version* **TLS 1.2**, *Profile* **Modern** → **Create**. Si ya estás dentro del asistente, termina con *GCP default* y después asóciala: **Edit** → **Frontend configuration** → *SSL policy*, o
-> `gcloud compute target-https-proxies update <NOMBRE_PROXY> --ssl-policy=ssl-pol-modern` (el nombre sale de `gcloud compute target-https-proxies list`).
-
 Click **Done**.
 
 **Frontend 2 — HTTP (redirección):**
 En la pantalla del frontend HTTPS, marca la casilla **Enable HTTP to HTTPS redirect**.
 
-> ⚠️ **No agregues un frontend HTTP :80 a mano** además de marcar la casilla: ambos intentan usar la misma IP en el puerto 80 y la creación falla con *"Specified IP address is in-use and would result in a conflict"*. Debe existir **un solo** frontend (HTTPS :443) con la casilla marcada. Si `gcloud compute addresses describe ip-waap-lab --global --format="value(status,users)"` devuelve `RESERVED` sin usuarios, el conflicto está dentro del asistente y no en recursos previos.
-
-**Por qué:** crea automáticamente un segundo forwarding rule en el puerto 80 con un URL map cuya única acción es devolver `301` hacia `https://`. Así nadie navega en claro, y el usuario que teclea `http://` igual llega seguro. Es una buena práctica de seguridad web estándar.
-
-### Review and finalize
-
-Revisa que aparezcan: 1 backend service, 1 health check, 2 frontends (443 y 80). Click **Create**.
+Se crea automáticamente un segundo forwarding rule en el puerto 80 con un URL map cuya única acción es devolver `301` hacia `https://`. Así nadie navega en claro, y el usuario que teclea `http://` igual llega seguro. Es una buena práctica de seguridad web estándar.
 
 ---
 
@@ -133,8 +114,6 @@ gcloud compute backend-services get-health bes-juiceshop --global \
 curl -I http://app.tudominio.com      # -> 301 Moved Permanently a https
 curl -I https://app.tudominio.com     # -> 200 OK (Juice Shop)
 ```
-
-> 🕐 Si el certificado se queda en `PROVISIONING` más de una hora: casi siempre el registro `A` no apunta bien a la IP. Verifica con `dig +short app.tudominio.com`.
 
 📸 **Evidencia:** certificado `ACTIVE`, backends `2/2 HEALTHY`, Juice Shop abierto en el navegador por HTTPS con candado → `evidencias/03-cert-active.png`, `evidencias/03-portal-https.png`.
 
