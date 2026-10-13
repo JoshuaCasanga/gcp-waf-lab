@@ -189,8 +189,6 @@ bash scripts/test-waf.sh "https://$DOMAIN"   # validación del WAF
 gcloud projects delete "$PROJECT_ID"         # limpieza
 ```
 
-Todos los scripts pasan `shellcheck`. `test-waf.sh` cubre además las simulaciones de ataque de XSS, path traversal y RCE para quien reproduzca el lab.
-
 ---
 
 ## Mejoras futuras
