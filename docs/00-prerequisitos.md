@@ -1,7 +1,6 @@
 # Fase 0 — Proyecto, facturación y guardrails
 
 > **Objetivo:** partir de un proyecto limpio y aislado, con alerta de presupuesto y solo las APIs necesarias habilitadas.
-> **Tiempo estimado:** 15 min.
 
 La consola de GCP puede estar en español o inglés. Esta guía usa los nombres **en inglés** (los que aparecen en la documentación oficial); si tu consola está en español, el orden de las pantallas es el mismo.
 
@@ -36,7 +35,6 @@ Click **Create**.
 
 Click **Finish**.
 
-> ⚠️ Un presupuesto **avisa, no corta**. Lo que corta el gasto es ejecutar la [Fase 7 — Limpieza](07-limpieza.md).
 
 ---
 
@@ -86,6 +84,3 @@ cd gcp-waap-lab
 cp scripts/00-variables.sh.example scripts/00-variables.sh   # edita PROJECT_ID y DOMAIN
 ```
 
-✅ **Checkpoint:** proyecto creado, facturación vinculada, presupuesto activo, 4 APIs habilitadas.
-
-➡️ Siguiente: [Fase 1 — Red](01-red.md)
