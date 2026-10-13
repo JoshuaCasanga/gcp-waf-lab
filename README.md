@@ -1,7 +1,5 @@
 # GCP WAF/WAAP Lab: Portal web protegido con Cloud Armor
 
-GCP WAAP Lab: portal web protegido con Cloud Armor
-
 ![GCP](https://img.shields.io/badge/Google_Cloud-Cloud_Armor-4285F4?logo=googlecloud&logoColor=white)
 ![WAF](https://img.shields.io/badge/WAF-OWASP_CRS_3.3-000000?logo=owasp&logoColor=white)
 
