@@ -1,7 +1,7 @@
 [README.md](https://github.com/user-attachments/files/33361619/README.md)
 # GCP WAF/WAAP Lab: Portal web protegido con Cloud Armor
 
-![GCP](https://img.shields.io/badge/Google_Cloud-Cloud_Armor-4285F4?logo=googleclo# GCP WAAP Lab: portal web protegido con Cloud Armor
+GCP WAAP Lab: portal web protegido con Cloud Armor
 
 ![GCP](https://img.shields.io/badge/Google_Cloud-Cloud_Armor-4285F4?logo=googlecloud&logoColor=white)
 ![WAF](https://img.shields.io/badge/WAF-OWASP_CRS_3.3-000000?logo=owasp&logoColor=white)
@@ -134,6 +134,39 @@ jsonPayload.previewSecurityPolicy.outcome="DENY"
 
 ---
 
+## Servicios de Google Cloud utilizados
+
+### Seguridad
+- **Cloud Armor**: política de seguridad de backend con reglas WAF preconfiguradas (OWASP CRS 3.3), rate-based ban, geo-filtrado y allowlist de IP.
+- **Identity-Aware Proxy (IAP)**: acceso SSH a las VMs sin IP pública ni bastión.
+- **IAM y Service Accounts**: cuenta de servicio dedicada con permisos mínimos (`logging.logWriter`, `monitoring.metricWriter`).
+- **OS Login**: acceso SSH controlado por IAM, con llaves SSH de proyecto bloqueadas.
+
+### Entrega de la aplicación
+- **Cloud Load Balancing**: Global external Application Load Balancer (forwarding rules, target proxies, URL map, backend service).
+- **Certificado SSL administrado por Google**: emisión y renovación automática del certificado TLS.
+- **SSL Policies**: perfil *MODERN* con TLS 1.2 como versión mínima.
+- **Dirección IP externa estática (global)**: IP fija para el DNS y el certificado.
+
+### Red
+- **Virtual Private Cloud (VPC)**: red en modo custom con una subred en `southamerica-west1`, Private Google Access y Flow Logs.
+- **VPC Firewall Rules**: entrada permitida solo desde Google Front End, health checks e IAP; deny-all explícito con log.
+- **Cloud Router**: plano de control para Cloud NAT.
+- **Cloud NAT**: salida a Internet para VMs sin IP pública, con logging.
+
+### Cómputo
+- **Compute Engine**: plantilla de instancia endurecida (Shielded VM, sin IP externa) con Debian 12, Docker y OWASP Juice Shop.
+- **Managed Instance Group (MIG) regional**: 2 a 4 VMs en 3 zonas, con autoescalado y autorreparación.
+- **Health Checks**: chequeo HTTP en el puerto 3000 para el balanceador y el autohealing.
+
+### Observabilidad y operación
+- **Cloud Logging**: logs del balanceador al 100 %, Cloud Armor en modo VERBOSE, firewall y contenedores.
+- **Cloud Monitoring**: Metrics Explorer y dashboard con consultas PromQL de bloqueos por minuto.
+- **Cloud Billing – Budgets & alerts**: presupuesto con alertas al 50, 90 y 100 %.
+- **Cloud Shell**: ejecución de `gcloud`, pruebas con `curl` y consultas de logs.
+
+---
+
 ## Cómo se creó el Lab en Google Cloud
 
 La guía documenta **cada click de la consola y la función que cumple**, con su equivalente en `gcloud`:
@@ -142,12 +175,12 @@ La guía documenta **cada click de la consola y la función que cumple**, con su
 |---|---|---|
 | 0 | [Prerrequisitos](docs/00-prerequisitos.md) | Proyecto, presupuesto, APIs, dominio |
 | 1 | [Red](docs/01-red.md) | VPC custom, firewall de mínimo privilegio, Cloud NAT |
-| 2 | [Cómputo](docs/02-computo.md) | Cuenta de servicio, plantilla endurecida, health check, MIG regional |
+| 2 | [Compute/VM](docs/02-computo.md) | Cuenta de servicio, plantilla endurecida, health check, MIG regional |
 | 3 | [Load Balancer](docs/03-load-balancer.md) | ALB global, IP estática, certificado administrado, HTTP→HTTPS |
 | 4 | [Cloud Armor](docs/04-cloud-armor.md) | Política, reglas OWASP CRS, rate limit, geo, allowlist, logging VERBOSE |
 | 5 | [Validación](docs/05-pruebas.md) | Preview → enforcement, lectura de firmas en logs |
 | 6 | [Observabilidad](docs/06-observabilidad.md) | Dashboard, métrica basada en logs, alerta |
-| 7 | [Limpieza](docs/07-limpieza.md) | Destrucción ordenada para detener el gasto |
+
 
 Despliegue por CLI (Fases 1–4):
 
@@ -159,7 +192,7 @@ bash scripts/test-waf.sh "https://$DOMAIN"   # validación del WAF
 gcloud projects delete "$PROJECT_ID"         # limpieza
 ```
 
-Todos los scripts pasan `shellcheck`. `test-waf.sh` cubre además las sondas de XSS, path traversal y RCE para quien reproduzca el lab.
+Todos los scripts pasan `shellcheck`. `test-waf.sh` cubre además las simulaciones de ataque de XSS, path traversal y RCE para quien reproduzca el lab.
 
 ---
 
