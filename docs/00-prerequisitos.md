@@ -2,8 +2,6 @@
 
 > **Objetivo:** partir de un proyecto limpio y aislado, con alerta de presupuesto y solo las APIs necesarias habilitadas.
 
-La consola de GCP puede estar en español o inglés. Esta guía usa los nombres **en inglés** (los que aparecen en la documentación oficial); si tu consola está en español, el orden de las pantallas es el mismo.
-
 ---
 
 ## 0.1 Crear un proyecto dedicado
