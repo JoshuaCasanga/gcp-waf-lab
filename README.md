@@ -1,16 +1,13 @@
-# GCP WAAP Lab: portal web protegido con Cloud Armor
+# GCP WAF/WAAP Lab: Portal web protegido con Cloud Armor
 
 ![GCP](https://img.shields.io/badge/Google_Cloud-Cloud_Armor-4285F4?logo=googlecloud&logoColor=white)
 ![WAF](https://img.shields.io/badge/WAF-OWASP_CRS_3.3-000000?logo=owasp&logoColor=white)
-![Región](https://img.shields.io/badge/Región-southamerica--west1_(Santiago)-34A853)
-![Estado](https://img.shields.io/badge/Estado-Completado_y_destruido-lightgrey)
 
-Laboratorio construido **desde cero** en Google Cloud para publicar un portal web detrás de un **Global external Application Load Balancer** y protegerlo con **Cloud Armor** (WAF con OWASP CRS, rate limiting y geo-filtrado), sobre una red diseñada con **mínimo privilegio**.
+
+Laboratorio construido **desde cero** en Google Cloud para publicar un portal web detrás de un **Global external Application Load Balancer** y protegerlo con **Cloud Armor** (WAF con OWASP Top 10 Web, Rate Limiting y filtrado por geolocalización), sobre una arquitectura diseñada considerando el **mínimo privilegio**.
 
 El backend es **[OWASP Juice Shop](https://owasp.org/www-project-juice-shop/)**, una aplicación vulnerable a propósito. Eso permitió demostrar con ataques reales el comportamiento del WAF **antes y después** de activarlo, y leer en los logs la firma exacta que detuvo cada ataque.
 
-> **Autor:** Aarón Hidalgo Casanga — Cybersecurity Specialist, Application Security
-> **Enfoque:** WAAP · edge security · application delivery · defensa en profundidad
 
 ---
 
