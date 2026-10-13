@@ -27,7 +27,7 @@ Click **Reserve**.
 
 ---
 
-## 3.2 Crear el balanceador (asistente)
+## 3.2 Crear el balanceador (con el wizard)
 
 **Ruta:** ☰ → **Network services** → **Load balancing** → **Create load balancer**
 
