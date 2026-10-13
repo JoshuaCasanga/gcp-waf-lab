@@ -1,4 +1,4 @@
-# Fase 3 — Balanceador de aplicaciones global + HTTPS
+# Fase 3 — Balanceador de aplicaciones global + HTTPS/TLS
 
 > **Objetivo:** publicar el MIG detrás de un **Global external Application Load Balancer** con IP pública estática, certificado TLS administrado por Google y redirección HTTP→HTTPS. Este balanceador es el punto donde, en la Fase 4, se "engancha" Cloud Armor.
 
