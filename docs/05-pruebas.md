@@ -1,8 +1,7 @@
 # Fase 5 — Validar que el WAF bloquea (antes/después)
 
-> **Objetivo:** comprobar con evidencia que las reglas de Cloud Armor detectan y bloquean las sondas canónicas del OWASP Top 10 contra **tu propio** portal de lab, y leer en los logs qué firma disparó.
-> **Tiempo estimado:** 30 min.
-> **Alcance ético:** todo esto se ejecuta exclusivamente contra el balanceador de **tu** proyecto. Las cadenas usadas son los *test strings* públicos y triviales que la propia documentación de WAF usa para verificación; su único fin aquí es confirmar que la respuesta es `403`.
+> **Objetivo:** comprobar con evidencia que las reglas de Cloud Armor detectan y bloquean las pruebas del OWASP Top 10 contra el portal del lab, y leer en los logs qué firma se disparó.
+
 
 Las pruebas se corren desde **Cloud Shell** con el script [`scripts/test-waf.sh`](../scripts/test-waf.sh), que automatiza lo de abajo y arma una tabla de resultados.
 
@@ -37,7 +36,7 @@ Con las reglas WAF aún en **Preview**, lanza las sondas canónicas. En Preview 
 curl -s -o /dev/null -w "%{http_code}\n" --get "$TARGET/rest/products/search" --data-urlencode "q=' OR 1=1--"
 ```
 
-> 🧠 **Por qué no basta una comilla sola:** en **sensibilidad 1** (paranoia level 1 del CRS) las firmas SQLi necesitan una estructura SQL reconocible (la detección principal, `942100`, usa *libinjection*). Las firmas que reaccionan a caracteres sueltos como `'` (`942110`, `942430`…) son de nivel 2 o superior. Una petición `?q='` **pasa sin coincidencia** en nivel 1: es el equilibrio cobertura / falsos positivos, igual que la *accuracy* de las firmas en ASM. Documéntalo en el README como hallazgo.
+>  **Por qué no basta una comilla sola:** en **sensibilidad 1** (paranoia level 1 del CRS) las firmas SQLi necesitan una estructura SQL reconocible (la detección principal, `942100`, usa *libinjection*). Las firmas que reaccionan a caracteres sueltos como `'` (`942110`, `942430`…) son de nivel 2 o superior. Una petición `?q='` **pasa sin coincidencia** en nivel 1: es el equilibrio cobertura / falsos positivos, igual que la *accuracy* de las firmas en ASM. Documéntalo en el README como hallazgo.
 
 **Lee el log del intento** (Cloud Logging):
 ```bash
@@ -98,7 +97,7 @@ Los campos `matched*` solo aparecen con logging **VERBOSE** (Fase 4.8). La app r
 
 ## 5.3 Pasar a enforcement/blocking
 
-En cada regla WAF (prioridades 1000–1070) **desmarca Preview** y guarda. CLI equivalente:
+En cada regla WAF (prioridades 1000–1070) **desmarcar Preview** CLI equivalente:
 
 ```bash
 for P in 1000 1010 1020 1030 1040 1050 1060 1070; do
@@ -109,16 +108,16 @@ done
 
 ---
 
-## 5.4 Demostración "después" (enforcement)
+## 5.4 Demostración "después" (modo blocking)
 
 Luego se repiten exactamente las mismas pruebas. Ahora la respuesta debe ser **403** y la app nunca las ve.
 
 ```bash
-# SQLi canónico -> 403
+# SQLi  -> 403
 curl -s -o /dev/null -w "sqli: %{http_code}\n" --get "$TARGET/rest/products/search" --data-urlencode "q=' OR 1=1--"
-# XSS canónico -> 403
+# XSS  -> 403
 curl -s -o /dev/null -w "xss:  %{http_code}\n" --get "$TARGET/" --data-urlencode "x=<script>alert(1)</script>"
-# Path traversal canónico -> 403
+# Path traversal  -> 403
 curl -s -o /dev/null -w "lfi:  %{http_code}\n" --get "$TARGET/" --data-urlencode "file=../../../../etc/passwd"
 # Tráfico legítimo -> sigue 200
 curl -s -o /dev/null -w "ok:   %{http_code}\n" "$TARGET/rest/products/search?q=apple"
