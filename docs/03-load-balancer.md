@@ -1,6 +1,6 @@
-# Fase 3 — Balanceador de aplicaciones global + HTTPS/TLS
+# Fase 3 — Load Balancer + HTTPS/TLS
 
-> **Objetivo:** publicar el MIG detrás de un **Global external Application Load Balancer** con IP pública estática, certificado TLS administrado por Google y redirección HTTP→HTTPS. Este balanceador es el punto donde, en la Fase 4, se "engancha" Cloud Armor.
+> **Objetivo:** publicar el MIG detrás de un **Global external Application Load Balancer** con IP pública estática, certificado TLS administrado por Google y redirección HTTP→HTTPS. Este balanceador es el punto donde, en la Fase 4, se configura el Cloud Armor.
 
 
 El balanceador de aplicaciones global se compone de piezas encadenadas. La consola las crea en un solo asistente, pero conviene entender cada una porque el equivalente CLI las crea por separado.
