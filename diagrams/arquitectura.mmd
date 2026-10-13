@@ -1,0 +1,40 @@
+%% Arquitectura WAAP Lab en GCP (versión simplificada)
+flowchart LR
+    user([Usuario])
+    attacker([Atacante<br/>SQLi · XSS · flood])
+
+    subgraph edge[Google Cloud Edge]
+        lb[Load Balancer global<br/>IP estática · TLS 1.2+<br/>HTTP → HTTPS]
+        armor{{Cloud Armor<br/>WAF OWASP CRS<br/>rate limit · geo}}
+    end
+
+    blocked[/403 · 429/]
+
+    subgraph vpc[VPC · southamerica-west1]
+        mig[MIG regional · 2–4 VMs<br/>Juice Shop<br/>sin IP pública]
+        nat[Cloud NAT<br/>solo salida]
+    end
+
+    iap[IAP<br/>SSH admin]
+    obs[(Logging +<br/>Monitoring)]
+
+    user -->|HTTPS| lb
+    attacker -.-> lb
+    lb --> armor
+    armor -->|permitido<br/>firewall: solo GFE :3000| mig
+    armor -.->|bloqueado| blocked
+    iap -->|:22| mig
+    mig --> nat
+    armor -.-> obs
+    mig -.-> obs
+
+    classDef sec fill:#b91c1c,stroke:#7f1d1d,color:#fff;
+    classDef net fill:#1d4ed8,stroke:#1e3a8a,color:#fff;
+    classDef comp fill:#047857,stroke:#064e3b,color:#fff;
+    classDef obs fill:#6d28d9,stroke:#4c1d95,color:#fff;
+    classDef out fill:#fef3c7,stroke:#b45309,color:#78350f;
+    class armor,iap sec;
+    class lb,nat net;
+    class mig comp;
+    class obs obs;
+    class blocked out;

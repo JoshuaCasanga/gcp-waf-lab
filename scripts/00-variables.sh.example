@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Copia este archivo a 00-variables.sh y ajusta los valores.
+# Luego: source scripts/00-variables.sh
+
+# --- Identidad del proyecto ---
+export PROJECT_ID="waap-lab-ahc01"          # <-- CAMBIA el sufijo
+export REGION="southamerica-west1"          # Santiago
+export ZONES="southamerica-west1-a,southamerica-west1-b,southamerica-west1-c"
+
+# --- Nombre DNS que apunta a la IP del balanceador ---
+# Dominio propio (A record) o sslip.io con la IP-con-guiones.
+export DOMAIN="app.tudominio.com"           # <-- CAMBIA
+
+# --- Nombres de recursos (puedes dejarlos así) ---
+export VPC="vpc-waap-lab"
+export SUBNET="snet-web-scl"
+export SUBNET_RANGE="10.10.10.0/24"
+export TAG="web-backend"
+export SA="sa-web-backend"
+export TEMPLATE="it-juiceshop-v1"
+export MIG="mig-juiceshop"
+export HC="hc-juiceshop"
+export BES="bes-juiceshop"
+export ARMOR="ca-waap-lab"
+export IP_NAME="ip-waap-lab"
+export CERT="cert-waap-lab"
+export SSL_POLICY="ssl-pol-modern"
+export ROUTER="cr-scl"
+export NAT="nat-scl"
+export APP_PORT="3000"
+
+# Rangos de Google (no cambiar)
+export GFE_HC_RANGES="35.191.0.0/16,130.211.0.0/22"
+export IAP_RANGE="35.235.240.0/20"
