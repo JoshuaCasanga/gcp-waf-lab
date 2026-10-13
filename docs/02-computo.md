@@ -1,11 +1,8 @@
-# Fase 2 — Cómputo: identidad, plantilla endurecida, health check y MIG regional
+# Fase 2 — VMs: IAM, plantilla hardenizada, health check y MIG regional
 
 > **Objetivo:** un grupo autoescalable y autorreparable de VMs **sin IP pública**, endurecidas, que corren **OWASP Juice Shop** (aplicación deliberadamente vulnerable) en el puerto 3000.
-> **Tiempo estimado:** 30 min (+5 min de arranque de las VMs).
 
-**¿Por qué Juice Shop?** Es una app Node.js/Angular con vulnerabilidades reales del OWASP Top 10 (SQLi en el login, XSS, directorio `/ftp` expuesto, `/metrics` público). Permite demostrar **antes/después** del WAF con ataques reales y no con un "Hello World".
-
-> ⚠️ Juice Shop es vulnerable por diseño. Nunca la publiques sin el WAF activo más tiempo del necesario, y destruye el lab al terminar.
+**¿Por qué Juice Shop?** Es una app Node.js/Angular con vulnerabilidades reales del OWASP Top 10 (SQLi en el login, XSS, directorio `/ftp` expuesto, `/metrics` público, etc). Permite demostrar **antes/después** del WAF con ataques reales.
 
 ---
 
@@ -22,11 +19,11 @@
 
 Click **Done**.
 
-**Por qué no usar la cuenta por defecto de Compute:** la *Compute Engine default service account* suele tener rol **Editor** sobre todo el proyecto. Si un atacante compromete la VM (Juice Shop es vulnerable…), podría leer el token del *metadata server* y administrar el proyecto. Con `sa-web-backend` el radio de impacto se limita a "escribir logs y métricas".
+Es importante mencionar que la *Compute Engine default service account* suele tener rol **Editor** sobre todo el proyecto. Si un atacante compromete la VM (Juice Shop es vulnerable…), podría leer el token del *metadata server* y administrar el proyecto. Con `sa-web-backend` el radio de impacto se limita a "escribir logs y métricas".
 
 ---
 
-## 2.2 Plantilla de instancia endurecida
+## 2.2 Plantilla de instancia hardenizada
 
 **Ruta:** ☰ → **Compute Engine** → **Instance templates** → **Create instance template**
 
@@ -42,11 +39,11 @@ Click **Done**.
 | Firewall | **Allow HTTP traffic / Allow HTTPS traffic** | **Sin marcar** | Solo agregan los tags `http-server`/`https-server`, pensados para reglas que abren a `0.0.0.0/0`. Aquí el único ingreso es el balanceador. |
 | Advanced options → **Networking** | **Network tags** | `web-backend` | Engancha las reglas de firewall de la Fase 1. |
 | | **Network interfaces** → **Edit** | Network `vpc-waap-lab`, Subnetwork `snet-web-scl` | |
-| | **External IPv4 address** | **None** | 🔑 **Decisión de seguridad central del lab**: la VM no existe en Internet. El único camino es GFE → Cloud Armor → backend. |
+| | **External IPv4 address** | **None** |  **Decisión de seguridad central del lab**: la VM no existe en Internet. El único camino es GFE → Cloud Armor → backend. |
 | Advanced options → **Security** | **Shielded VM**: *Turn on Secure Boot*, *Turn on vTPM*, *Turn on Integrity Monitoring* | Las tres activadas | Secure Boot impide cargar bootloaders/kernels no firmados (rootkits); vTPM mide el arranque; Integrity Monitoring alerta si esa medición cambia. |
 | Advanced options → **Management** | **Automation → Startup script** | Pegar el contenido de [`scripts/startup-script.sh`](../scripts/startup-script.sh) | Instala Docker y levanta Juice Shop en cada arranque. Las VMs del MIG son **ganado, no mascotas**: se configuran solas, nadie entra a instalar nada a mano. |
 | | **Metadata** → *Add item* | `enable-oslogin` = `TRUE` | El acceso SSH se controla con **IAM** (roles `roles/compute.osLogin`) y queda auditado, en vez de llaves SSH sueltas en metadatos. |
-| Advanced options → **Security** → **SSH Keys** (o *Manage access*) | **Block project-wide SSH keys** | ✅ Marcado | Ignora llaves SSH a nivel de proyecto que alguien pudiera agregar. ⚠️ **No** lo agregues como metadato libre: la consola rechaza la key `block-project-ssh-keys` en *Metadata* con el aviso *"use the SSH Keys section"*. Con OS Login activo estas llaves ya se ignoran; esto es defensa en profundidad. |
+| Advanced options → **Security** → **SSH Keys** (o *Manage access*) | **Block project-wide SSH keys** | Check | Ignora llaves SSH a nivel de proyecto que alguien pudiera agregar.  **No** se debe agregar como metadato libre: la consola rechaza la key `block-project-ssh-keys` en *Metadata* con el aviso *"use the SSH Keys section"*. Con OS Login activo estas llaves ya se ignoran; esto es defensa en profundidad. |
 
 Click **Create**.
 
@@ -72,7 +69,7 @@ docker run -d --name juiceshop --restart unless-stopped \
 |---|---|---|
 | **Name** | `hc-juiceshop` | |
 | **Scope** | **Global** | El balanceador **global** exige health checks globales. |
-| **Protocol / Port** | HTTP / `3000` | Sondea exactamente el servicio que se publica, no solo que la VM esté encendida. |
+| **Protocol / Port** | HTTP / `3000` | Revisa exactamente el servicio que se publica, no solo que la VM esté encendida. |
 | **Proxy protocol** | NONE | |
 | **Request path** | `/` | La home de Juice Shop responde `200` cuando la app está lista. Ojo: un `301`/`302` cuenta como **no sano**. |
 | **Logs** | **On** | Registra cambios de estado (HEALTHY ↔ UNHEALTHY): esencial para troubleshooting. |
@@ -81,7 +78,6 @@ docker run -d --name juiceshop --restart unless-stopped \
 
 Click **Create**.
 
-> 🔗 **Equivalencia F5:** es el *health monitor* del pool (BIG-IP) o el *health check* del *origin pool* (XC).
 
 ---
 
@@ -89,7 +85,6 @@ Click **Create**.
 
 **Ruta:** ☰ → **Compute Engine** → **Instance groups** → **Create instance group** → **New managed instance group (stateless)**
 
-> ⚠️ **Configura primero *Location* (más abajo en el formulario) y después elige la plantilla.** El campo *Instance template* solo muestra plantillas globales o regionales **de la región seleccionada** en *Location*, que por defecto viene en otra región. Si eliges la plantilla antes, verás *"No matches"* aunque `it-juiceshop-v1` exista.
 
 | Campo | Valor | Por qué |
 |---|---|---|
@@ -107,13 +102,11 @@ Click **Create**.
 
 Click **Create**.
 
-> 💡 En producción conviene un health check de *autohealing* separado y más conservador que el del balanceador, para que un pico de carga no provoque recreación de VMs. Para el lab, uno basta.
 
 ---
 
 ## 2.5 Verificación
 
-Espera ~5 minutos y valida:
 
 ```bash
 # Las VMs NO deben tener IP externa (columna EXTERNAL_IP vacía)
@@ -127,11 +120,4 @@ gcloud compute ssh "$VM" --zone="$ZONE" --tunnel-through-iap \
 # Esperado: contenedor juiceshop "Up" y código 200
 ```
 
-Si `docker ps` sale vacío: revisa el log del startup script con
-`sudo journalctl -u google-startup-scripts.service --no-pager | tail -50`.
 
-📸 **Evidencia:** lista de VMs sin IP externa + salida del comando por IAP → `evidencias/02-vms-sin-ip.png`, `evidencias/02-iap-ssh.png`.
-
-✅ **Checkpoint:** 2 VMs en zonas distintas, Juice Shop responde 200 en `localhost:3000`, sin IPs públicas.
-
-➡️ Siguiente: [Fase 3 — Load Balancer](03-load-balancer.md)
